@@ -17,6 +17,11 @@ def tweak(solution):
 
 
 def local_search(solution):
+    """
+    Функция локального поиска. обычно запускаем в каком-либо цикле, который зависит либо от времени, либо от условий
+    :param solution:
+    :return: лучшее из двух решений
+    """
     new_solution = tweak(solution)
     if quality(new_solution) > quality(solution):
         solution = new_solution
