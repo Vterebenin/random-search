@@ -3,10 +3,6 @@ import operator
 from random import randrange, shuffle
 from copy import deepcopy
 
-time = datetime.datetime.now()
-time_spend = datetime.datetime.now() - time
-print(time_spend)
-
 
 class Backpack:
     """
