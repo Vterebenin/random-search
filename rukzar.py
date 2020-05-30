@@ -1,6 +1,8 @@
 import operator
 from random import randrange, shuffle
 from copy import deepcopy
+from itertools import combinations
+from time import time
 
 
 class Backpack:
@@ -30,12 +32,12 @@ class Backpack:
                 if item.weight == packed_item.weight and item.cost == packed_item.cost:
                     del possible_items[item_key]
                     break
-        for i in range(3):
+        for i in range(int(len(self.items))):
             popped_item = self.items.pop()
             self.weight -= popped_item.weight
         shuffle(possible_items)
         for item in possible_items:
-            if self.weight + item.weight < self.max_weight:
+            if self.weight + item.weight <= self.max_weight:
                 self.weight += item.weight
                 self.items.append(item)
         self.calc_cost()
@@ -59,13 +61,25 @@ class Item:
         self.cost = cost
 
     def __str__(self):
-        return f"предмет с весом {self.weight} и ценой {self.cost}"
+        return f"Сгенерирован предмет с весом {self.weight} и ценой {self.cost}"
+
+
+def normal_algorithm(max_w, _items):
+    items = [(item.weight, item.cost) for item in _items]
+    result = max(filter(lambda x: sum(list(zip(*x))[0]) <= max_w, (v for r in range(1, len(items)) for v in combinations(filter(lambda x: x[0] <= max_w, items), r))), key=lambda x: sum(list(zip(*x))[1]))
+    result_weight = sum([x[0] for x in result])
+    result_cost = sum([x[1] for x in result])
+    print(f'Получено решение: {len(result)}')
+    print(f'Количество: {len(result)}')
+    print(f'Вес: {result_weight}')
+    print(f'Сумма: {result_cost}')
 
 
 def generate_items(items_count):
     items = []
     for i in range(items_count):
-        item = Item(randrange(10, 15), randrange(3,25))
+        item = Item(randrange(10, 16), randrange(3, 26))
+        print(item)
         items.append(item)
     return items
 
@@ -79,12 +93,13 @@ def pack_backpack(backpack):
 
 def random_search(restart_count, solution):
     solutions = []
-    for i in range(10):
-        local_optimum = local_search(5, solution)
+    for i in range(restart_count):
+        local_optimum = local_search(10, solution)
         solutions.append(local_optimum)
 
     solutions.sort(key=operator.attrgetter('weight'), reverse=False)
     solutions.sort(key=operator.attrgetter('cost'), reverse=True)
+    # [print(x) for x in solutions]
     return solutions[0]
 
 
@@ -97,10 +112,20 @@ def local_search(restart_count, solution):
     return solution
 
 
-possible_items = generate_items(20)
+possible_items = generate_items(23)
+
+start_time = time()
+normal_algorithm(100, possible_items)
+print(f'Затраченое время на обычное решение через комбинаторику: {time() - start_time}')
+
+start_time = time()
 solution = Backpack(100, possible_items)
 pack_backpack(solution)
-answer = random_search(5, solution)
+answer = random_search(100, solution)
+print('Упаковываем рюкзак...')
 print('Было найдено решение:')
 print(answer)
+print(f'Затраченое время на решение через локальный поиск со случайными перезапусками: {time() - start_time}')
+
+
 
