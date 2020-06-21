@@ -25,20 +25,16 @@ class Backpack:
     def tweak(self):
         """
         функция модификации рюкзака для локального поиска
+        Здесь заменяем один предмет другим и проверяем выжил ли кандидат
         """
-        delete_or_add = "delete" if randrange(0, 2) == 1 else "add"
-        # print(delete_or_add)
-        # shuffle(self.items)
-        # shuffle(self.possible_items)
-        item_to_append = self.possible_items[randrange(len(self.possible_items))]
-        if delete_or_add == "add" and not (self.weight + item_to_append.weight > self.max_weight):
-            self.items.append(item_to_append)
-            self.weight += item_to_append.weight
-        elif delete_or_add == "delete" or self.weight + item_to_append.weight > self.max_weight:
-            # удаляем элемент
-            popped_item = self.items.pop(randrange(len(self.items)))
-            self.weight -= popped_item.weight
+        item_to_append = self.possible_items[randrange(0, len(self.possible_items))]
+        index = randrange(0, len(self.items))
+        popped_item = self.items.pop(index)
+        self.weight -= popped_item.weight
+        self.items.append(item_to_append)
+        self.weight += item_to_append.weight
         self.calc_cost()
+        return self, True if self.weight <= self.max_weight else False
 
     def quality(self):
         """
@@ -76,7 +72,7 @@ def normal_algorithm(max_w, _items):
 def generate_items(items_count):
     items = []
     for i in range(items_count):
-        item = Item(randrange(10, 16), randrange(10, 26))
+        item = Item(randrange(10, 16), randrange(20, 26))
         print(item)
         items.append(item)
     return items
@@ -112,9 +108,10 @@ def random_search(restart_count, solution):
 def local_search(restart_count, solution):
     for _ in range(restart_count):
         new_solution = deepcopy(solution)
-        new_solution.tweak()
-        if solution.quality() < new_solution.quality():
-            solution = deepcopy(new_solution)
+        new_solution, survived = new_solution.tweak()
+        if survived:
+            if solution.quality() < new_solution.quality():
+                solution = deepcopy(new_solution)
     return solution
 
 
@@ -135,7 +132,7 @@ def read_items():
 
 
 possible_items = read_items()
-# possible_items = generate_items(40)
+# possible_items = generate_items(30)
 # save_items(possible_items)
 # start_time = time()
 # normal_algorithm(100, possible_items)
