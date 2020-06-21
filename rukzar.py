@@ -26,20 +26,18 @@ class Backpack:
         """
         функция модификации рюкзака для локального поиска
         """
-        possible_items = self.possible_items
-        for packed_item in self.items:
-            for item_key, item in enumerate(self.possible_items):
-                if item.weight == packed_item.weight and item.cost == packed_item.cost:
-                    del possible_items[item_key]
-                    break
-        for i in range(int(len(self.items))):
-            popped_item = self.items.pop()
+        delete_or_add = "delete" if randrange(0, 2) == 1 else "add"
+        # print(delete_or_add)
+        # shuffle(self.items)
+        # shuffle(self.possible_items)
+        item_to_append = self.possible_items[randrange(len(self.possible_items))]
+        if delete_or_add == "add" and not (self.weight + item_to_append.weight > self.max_weight):
+            self.items.append(item_to_append)
+            self.weight += item_to_append.weight
+        elif delete_or_add == "delete" or self.weight + item_to_append.weight > self.max_weight:
+            # удаляем элемент
+            popped_item = self.items.pop(randrange(len(self.items)))
             self.weight -= popped_item.weight
-        shuffle(possible_items)
-        for item in possible_items:
-            if self.weight + item.weight <= self.max_weight:
-                self.weight += item.weight
-                self.items.append(item)
         self.calc_cost()
 
     def quality(self):
@@ -78,10 +76,18 @@ def normal_algorithm(max_w, _items):
 def generate_items(items_count):
     items = []
     for i in range(items_count):
-        item = Item(randrange(10, 16), randrange(3, 26))
+        item = Item(randrange(10, 16), randrange(10, 26))
         print(item)
         items.append(item)
     return items
+
+
+def pack_greedy_backpack(backpack):
+    backpack.possible_items.sort(key=operator.attrgetter('cost'), reverse=True)
+    for item in backpack.possible_items:
+        if backpack.weight + item.weight < backpack.max_weight:
+            backpack.weight += item.weight
+            backpack.items.append(item)
 
 
 def pack_backpack(backpack):
@@ -94,11 +100,11 @@ def pack_backpack(backpack):
 def random_search(restart_count, solution):
     solutions = []
     for i in range(restart_count):
-        local_optimum = local_search(10, solution)
+        local_optimum = local_search(randrange(20, 100), solution)
         solutions.append(local_optimum)
 
-    solutions.sort(key=operator.attrgetter('weight'), reverse=False)
-    solutions.sort(key=operator.attrgetter('cost'), reverse=True)
+    solutions.sort(key=operator.attrgetter('weight'), reverse=True)
+    solutions.sort(key=operator.attrgetter('cost'), reverse=False)
     # [print(x) for x in solutions]
     return solutions[0]
 
@@ -112,11 +118,28 @@ def local_search(restart_count, solution):
     return solution
 
 
-possible_items = generate_items(23)
+def save_items(items):
+    with open("possible_items.txt", "w") as txt_file:
+        for item in items:
+            txt_file.write(f'{item.weight},{item.cost}|')
 
-start_time = time()
-normal_algorithm(100, possible_items)
-print(f'Затраченое время на обычное решение через комбинаторику: {time() - start_time}')
+
+def read_items():
+    with open("possible_items.txt", "r") as txt_file:
+        items = []
+        for file_item in txt_file.read().split('|'):
+            item = file_item.split(',')
+            if len(item) > 1:
+                items.append(Item(int(item[0]), int(item[1])))
+    return items
+
+
+possible_items = read_items()
+# possible_items = generate_items(40)
+# save_items(possible_items)
+# start_time = time()
+# normal_algorithm(100, possible_items)
+# print(f'Затраченое время на обычное решение через комбинаторику: {time() - start_time}')
 
 start_time = time()
 solution = Backpack(100, possible_items)
@@ -128,4 +151,12 @@ print(answer)
 print(f'Затраченое время на решение через локальный поиск со случайными перезапусками: {time() - start_time}')
 
 
+start_time = time()
+greedy_solution = Backpack(100, possible_items)
+pack_greedy_backpack(greedy_solution)
+greedy_answer = random_search(100, greedy_solution)
+print('Упаковываем рюкзак жадным способом...')
+print('Было найдено решение:')
+print(greedy_answer)
+print(f'Затраченое время на решение через жадный алгоритм: {time() - start_time}')
 
